@@ -1,4 +1,5 @@
 import socket
+<<<<<<< HEAD
 import pickle
 import time
 from _thread import *
@@ -51,68 +52,27 @@ def ProbEval(X, Y):
     #가우시안 분포로 하고 싶은데 귀찮아서 그냥 다른걸로 함
     #return (max(1-abs(X-Y)/AllowedErrorrange, 0))
     return (GaussianVal(X, Y*AllowedErrorrange+0.1, Y))
+=======
+>>>>>>> parent of cbd3a0f (server tmp code)
 
-# MAC_MAPPING= {
-#     '1C' : 'B001',
-#     '24' : 'B002',
-#     '2F' : 'B003',
-#     '27' : 'B004',
-#     '2D' : 'B005'
-# }
 
-"""
-PARAMETERS
-"""
 HOST = '0.0.0.0'
 PORT = 50007
-NUM_CLIENT_THREADS=1
 
-global_queue = queue.Queue()
+# 소켓 생성
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
-def thread_main(conn, ip, port):
-    while True:
-        # receive
-        data = conn.recv(1024)
-        if not data:
-            print("[WARNING] No data received. Terminating thread")
-            conn.close()
-            return
-        unpickled_data = pickle.loads(data)
-        global_queue.put(unpickled_data)
+    print('binding')
+    s.bind((HOST, PORT))
+    print('listening')
+    s.listen(1)
 
-        # send back
-        conn.send(b'ack')
+    conn, addr = s.accept()
 
-def thread_callback():
-    pass
-
-def receive_main_thread():
-
-    while True:
-        # try generate socket
-        try:
-            conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except Exception as e:
-            print("[WARNING] Socket not generated. Retrying")
-            conn.close()
-            time.sleep(1)
-            continue
-        print("[INFO] Socket generated. Now binding")
-
-        # bind socket
-        try:
-            conn.bind( (HOST, PORT) )
-        except Exception as e:
-            print("[WARNING] Port binding failure. Retrying")
-            conn.close()
-            time.sleep(1)
-            continue
-        #conn.setblocking(False)
-        print("[INFO] Bind done. Now accepting")
-
-        # main accept thread
-        num_curr_clients = 0
+    with conn:
+        print('connected {}:{}'.format(addr[0], addr[1]))
         while True:
+<<<<<<< HEAD
             # listen
             try:
                 conn.listen(1)
@@ -195,3 +155,10 @@ if __name__ == "__main__":
         #plt.show()
         #print(buffer)
 
+=======
+            data = conn.recv(1024)
+            print('data: {}'.format(str(data)))
+            if not data:
+                break
+            conn.send(b'hey')
+>>>>>>> parent of cbd3a0f (server tmp code)
