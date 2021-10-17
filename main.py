@@ -90,7 +90,7 @@ if __name__ == "__main__":
         base_time = time.time()
         while time.time() - base_time < 3 :
             buffer.append( global_queue.get() )
-
+        print(buffer)
         # TODO tmp coding ; average values collected for 3s of beacon 1
         valuemap = [ [], [], [] ]
         for k, d in buffer:
@@ -104,7 +104,7 @@ if __name__ == "__main__":
                 if '1C' in d.keys():
                     valuemap[2].append(d['1C'])
 
-        avgvalue = [ sum(i)/len(i) for i in valuemap ]
+        avgvalue = [ sum(i)/len(i) if len(i) > 0 else -40 for i in valuemap ]
         print(avgvalue)
         # TODO tmp coding end
 
