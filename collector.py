@@ -10,6 +10,7 @@ PARAMETERS
 HOST = '0.0.0.0'
 PORT = 50007
 
+# TODO change often
 MAC_MAPPING= {
     '1C' : 'B001',
     '24' : 'B002',
@@ -17,6 +18,9 @@ MAC_MAPPING= {
     '27' : 'B004',
     '2D' : 'B005'
 }
+
+MACHINE_LIST = [ 'A', 'B', 'C' ]
+BEACON_LIST = [ 'B001', 'B002', 'B003', 'B004', 'B005']
 
 """
 class Collector
@@ -34,6 +38,7 @@ class Collector(object):
         ins.global_queue = queue.Queue()
         ins.status = 'CONNECTING'
         ins.basetime = time.time()*1000 # in milliseconds
+
         # start new thread
         start_new_thread( receive_main_thread, (ins, ) )
 
@@ -50,17 +55,22 @@ class Collector(object):
             data.append( ins.global_queue.get() )
 
         timestamp = int(time.time()*1000 - ins.basetime)
-        result = ( timestamp, {} )
+
+        # initialize base result dict
+        result_dict = {}
+        for mid in MACHINE_LIST:
+            result_dict[mid] = {}
+            for bid in BEACON_LIST:
+                result_dict[mid][bid] = []
+
         for m in data:
             mid = chr(64+m[0])
-            if mid not in result[1].keys():
-                result[1][mid] = {}
             for tup in m[1]:
                 bid = MAC_MAPPING[tup[0]]
                 rssi = tup[1]
-                if bid not in result[1][mid].keys():
-                    result[1][mid][bid] = []
-                result[1][mid][bid].append( rssi )
+                result_dict[mid][bid].append( rssi )
+
+        result = ( timestamp, result_dict )
 
         return result
 
