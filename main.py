@@ -29,6 +29,8 @@ def thread_main(conn, ip, port):
             print("[WARNING] No data received. Terminating thread")
             conn.close()
             return
+
+        # TODO need to parse data in c format
         unpickled_data = pickle.loads(data)
         global_queue.put(unpickled_data)
 
