@@ -13,6 +13,4 @@ if __name__ == '__main__':
         c.emptyQueue()
         time.sleep(1)
         timestamp, data = c.getQueue()
-        for key in data['A'].keys():
-            if key == 'B001':
-                print( key, sum(data['A'][key]) / len(data['A'][key]), len(data['A'][key]) )
+        print(data)

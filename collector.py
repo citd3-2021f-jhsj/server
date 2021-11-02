@@ -20,7 +20,9 @@ MAC_MAPPING= {
 }
 
 MACHINE_LIST = [ 'A', 'B', 'C' ]
+TARGET_NUM_MACHINE_CONNECTIONS = len(MACHINE_LIST)
 BEACON_LIST = [ 'B001', 'B002', 'B003', 'B004', 'B005']
+
 
 """
 class Collector
@@ -38,6 +40,7 @@ class Collector(object):
         ins.global_queue = queue.Queue()
         ins.status = 'CONNECTING'
         ins.basetime = time.time()*1000 # in milliseconds
+        ins.queue_collecting = False
 
         # start new thread
         start_new_thread( receive_main_thread, (ins, ) )
@@ -49,6 +52,10 @@ class Collector(object):
         with ins.global_queue.mutex:
             ins.global_queue.queue.clear()
 
+        # TODO run collect thread
+            # when collecting stop
+        ins.queue_collecting = True
+
     def getQueue(ins):
         data = []
         while ins.global_queue.qsize():
@@ -58,17 +65,17 @@ class Collector(object):
 
         # initialize base result dict
         result_dict = {}
-        for mid in MACHINE_LIST:
-            result_dict[mid] = {}
-            for bid in BEACON_LIST:
-                result_dict[mid][bid] = []
+        for bid in BEACON_LIST:
+            result_dict[bid] = {}
+            for mid in MACHINE_LIST:
+                result_dict[bid][mid] = []
 
         for m in data:
             mid = chr(64+m[0])
             for tup in m[1]:
                 bid = MAC_MAPPING[tup[0]]
                 rssi = tup[1]
-                result_dict[mid][bid].append( rssi )
+                result_dict[bid][mid].append( rssi )
 
         result = ( timestamp, result_dict )
 
@@ -136,7 +143,7 @@ def receive_main_thread(ins): # receive instance
         num_curr_clients = 0
         while True:
             # report connection status
-            if num_curr_clients > 0:
+            if num_curr_clients >= TARGET_NUM_MACHINE_CONNECTIONS:
                 ins.status = 'OK'
             else:
                 ins.status = 'CONNECTING'
@@ -154,3 +161,4 @@ def receive_main_thread(ins): # receive instance
         # shutdown before continue
         conn.close()
         time.sleep(1)
+
