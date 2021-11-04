@@ -16,12 +16,12 @@ MAC_MAPPING= {
     '24' : 'B002',
     '2F' : 'B003',
     '27' : 'B004',
-    '2D' : 'B005'
+    '2D' : 'B005',
 }
 
 MACHINE_LIST = [ 'A', 'B', 'C' ]
 TARGET_NUM_MACHINE_CONNECTIONS = len(MACHINE_LIST)
-BEACON_LIST = [ 'B001', 'B002', 'B003', 'B004', 'B005']
+BEACON_LIST = [ 'B001', 'B002', 'B003', 'B004', 'B005', ]
 
 
 """
@@ -96,17 +96,19 @@ def thread_main(ins, conn, ip, port):
 
         machine_id = int.from_bytes(data[1016:1020], byteorder='little')
         num_data = int.from_bytes(data[1020:], byteorder='little')
+        #print(num_data)
         parsed_data = []
         for idx in range(num_data):
             snippet = data[idx * 16: (idx + 1) * 16]
             mac_unique = str(snippet[1:2].hex()).upper()
-            rssi = bytearray(data[7:11])
+            rssi = bytearray(snippet[7:11])
             rssi.reverse()
             rssi = int(complement(str(rssi.hex())))
             parsed_data.append((mac_unique, rssi))
 
         # layout : ( mid, [ (mac_unique, rssi), ... ])
         ins.global_queue.put( (machine_id, parsed_data) )
+        #print(machine_id, parsed_data)
 
 
 def complement( hexstr ):
