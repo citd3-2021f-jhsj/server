@@ -1,5 +1,5 @@
 .idea/
-tmp/
+data_1103/
 __pycache__/
 tmp_*.py
 _*.*
