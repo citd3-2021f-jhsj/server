@@ -3,6 +3,7 @@ import pickle
 import time
 from _thread import *
 import queue
+import requests
 
 """
 PARAMETERS
@@ -10,19 +11,7 @@ PARAMETERS
 HOST = '0.0.0.0'
 PORT = 50007
 
-# TODO change often
-MAC_MAPPING= {
-    '1C' : 'B001',
-    '24' : 'B002',
-    '2F' : 'B003',
-    '27' : 'B004',
-    '2D' : 'B005',
-}
-
-MACHINE_LIST = [ 'A', 'B', 'C', 'D' ]   # TODO increase when connecting
-TARGET_NUM_MACHINE_CONNECTIONS = len(MACHINE_LIST)
-BEACON_LIST = [ 'B001', 'B002', 'B003', 'B004', 'B005', ]
-
+QUERY_LINK = 'http://server1.jinhoko.com:30006'
 
 """
 class Collector
@@ -37,130 +26,24 @@ class Collector(object):
 
     def __init__(ins):
         # initialize
-        ins.global_queue = queue.Queue()
-        ins.status = 'CONNECTING'
         ins.basetime = time.time()*1000 # in milliseconds
-        ins.queue_collecting = False
 
-        # start new thread
-        start_new_thread( receive_main_thread, (ins, ) )
+        # store last query time
 
-    def getStatus(ins):
-        return ins.status
+    def getDBStatus(ins):
+
+        response = requests.get(QUERY_LINK + '/ping')
+        return response.status_code == 204
 
     def emptyQueue(ins):
-        with ins.global_queue.mutex:
-            ins.global_queue.queue.clear()
 
-        # TODO run collect thread
-            # when collecting stop
-        ins.queue_collecting = True
+        # update last query time
+        pass
 
     def getQueue(ins):
-        data = []
-        while ins.global_queue.qsize():
-            data.append( ins.global_queue.get() )
 
-        timestamp = int(time.time()*1000 - ins.basetime)
-
-        # initialize base result dict
-        result_dict = {}
-        for bid in BEACON_LIST:
-            result_dict[bid] = {}
-            for mid in MACHINE_LIST:
-                result_dict[bid][mid] = []
-
-        for m in data:
-            mid = chr(64+m[0])
-            for tup in m[1]:
-                bid = MAC_MAPPING[tup[0]]
-                rssi = tup[1]
-                result_dict[bid][mid].append( rssi )
-
-        result = ( timestamp, result_dict )
-
-        return result
-
-
-def thread_main(ins, conn, ip, port):
-    while True:
-        # receive
-        data = conn.recv(1024)
-        if not data:
-#            print("[WARNING] No data received. Terminating thread")
-            conn.close()
-            return
-
-        # send back
-        conn.send(b'ack')
-
-        machine_id = int.from_bytes(data[1016:1020], byteorder='little')
-        num_data = int.from_bytes(data[1020:], byteorder='little')
-        #print(num_data)
-        parsed_data = []
-        for idx in range(num_data):
-            snippet = data[idx * 16: (idx + 1) * 16]
-            mac_unique = str(snippet[1:2].hex()).upper()
-            rssi = bytearray(snippet[7:11])
-            rssi.reverse()
-            rssi = int(complement(str(rssi.hex())))
-            parsed_data.append((mac_unique, rssi))
-
-        # layout : ( mid, [ (mac_unique, rssi), ... ])
-        ins.global_queue.put( (machine_id, parsed_data) )
-        #print(machine_id, parsed_data)
-
-
-def complement( hexstr ):
-    value = int(hexstr, 16)
-    if value & (1 << (32 - 1)):
-        value -= 1 << 32
-    return value
-
-
-def receive_main_thread(ins): # receive instance
-
-    while True:
-        # try generate socket
-        try:
-            conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except Exception as e:
-#            print("[WARNING] Socket not generated. Retrying")
-            conn.close()
-            time.sleep(1)
-            continue
-#           print("[INFO] Socket generated. Now binding")
-
-        # bind socket
-        try:
-            conn.bind( (HOST, PORT) )
-        except Exception as e:
-#           print("[WARNING] Port binding failure. Retrying")
-            conn.close()
-            time.sleep(1)
-            continue
-#       print("[INFO] Bind done. Now accepting")
-
-        # main accept thread
-        num_curr_clients = 0
-        while True:
-            # report connection status
-            if num_curr_clients >= TARGET_NUM_MACHINE_CONNECTIONS:
-                ins.status = 'OK'
-            else:
-                ins.status = 'CONNECTING'
-
-            # listen
-            try:
-                conn.listen(1)
-                cli, addr = conn.accept()
-#               print(f"[INFO] Client connection established - {addr[0]}:{addr[1]}")
-                num_curr_clients += 1
-                start_new_thread( thread_main, (ins, cli, addr[0], addr[1]) )
-            except Exception as e:
-                pass
-
-        # shutdown before continue
-        conn.close()
-        time.sleep(1)
+        # query using basetime
+        # update last query time
+        # return
+        pass
 
