@@ -21,7 +21,7 @@ MAC_MAPPING= {
     '2D' : 'B005',
 }
 
-MACHINE_LIST = [ 'A', 'B', 'C', 'D' ]   # TODO increase when connecting
+MACHINE_LIST = [ 'A', 'B', 'C', 'D', 'E', 'F' ]   # TODO increase when connecting
 TARGET_NUM_MACHINE_CONNECTIONS = len(MACHINE_LIST)
 BEACON_LIST = [ 'B001', 'B002', 'B003', 'B004', 'B005', ]
 
